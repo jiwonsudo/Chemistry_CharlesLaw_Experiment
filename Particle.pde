@@ -1,3 +1,4 @@
+// (c) 2022. Jiwon Jeong all rights reserved.
 
 class Particle
 {

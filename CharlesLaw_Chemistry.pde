@@ -19,7 +19,7 @@ PFont fontLight, fontRegular;
 //initial settings
 
 int temp = 100; // temperature of gas (K, C = K + 273.15)
-int mol_Of_Particle = 10; // * N(A)
+int mol_Of_Particle = 5; // * N(A)
 float ideal_Gas_Constant = 0.08206;
 float volume = Math.round(mol_Of_Particle * ideal_Gas_Constant * temp * 1000) / 1000.0; // volume of gas (L)
 
@@ -86,7 +86,8 @@ void drawTemp(int tempBtnSX, int tempBtnSY, int btnWidth)
   // info, max / min temp text
   fill(0);
   textFont(fontRegular, 15);
-  text("Max 600K", tempBtnSX + 15, tempBtnSY + 110);
+  String max = "Max: " + maxTemp + "(K)";
+  text(max, tempBtnSX + 2, tempBtnSY + 110);
   
   // draw buttons
   fill(250);
