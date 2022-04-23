@@ -9,7 +9,7 @@ the absolute temperature (K) inside the cylinder increases or decreases by 10 de
 to the temperature, and it is not calculated according to actual physical laws,
 but is implemented through approximate proportions.
 ! Volume values ​​are rounded to three decimal places.
-! Maximum temperature is 600(K).
+! Maximum temperature equals: (500 / 2) / (mol_Of_Particle * ideal_Gas_Constant)(K).
 */
 
 PFont fontLight, fontRegular;
@@ -19,16 +19,23 @@ PFont fontLight, fontRegular;
 //initial settings
 
 int temp = 100; // temperature of gas (K, C = K + 273.15)
-float volume; // volume of gas (L)
-int mol_Of_particle = 5; // * N(A)
+int mol_Of_Particle = 10; // * N(A)
 float ideal_Gas_Constant = 0.08206;
+float volume = Math.round(mol_Of_Particle * ideal_Gas_Constant * temp * 1000) / 1000.0; // volume of gas (L)
 
 //******************************************************************************************
+
+Particle[] particles = new Particle[mol_Of_Particle]; // number of particles
 
 int volumeRoundingDigits = 3; // Number of decimal places to round to volume values
 
 int tempSX = 550;
 int tempSY = 500;
+
+float maxTemp = Math.round((500 / 2) / (mol_Of_Particle * ideal_Gas_Constant) * 100) / 100.0;
+
+int lastTemp; // save lastest Temperature
+boolean wasMaxTemp = false; // check if it was Maximum Temperature last time
 
 float distanceToUP = dist(550, 558, mouseX, mouseY);
 float distanceToDN = dist(625, 558, mouseX, mouseY);
@@ -79,7 +86,7 @@ void drawTemp(int tempBtnSX, int tempBtnSY, int btnWidth)
   // info, max / min temp text
   fill(0);
   textFont(fontRegular, 15);
-  text("      10K / click \nMaximum: 600K", tempBtnSX, tempBtnSY + 120);
+  text("Max 600K", tempBtnSX + 15, tempBtnSY + 110);
   
   // draw buttons
   fill(250);
@@ -111,10 +118,10 @@ void drawTemp(int tempBtnSX, int tempBtnSY, int btnWidth)
 
 void drawPiston(int cydSX, int cydSY, int cydWidth)
 {
-  stroke(170);
+  stroke(50);
   strokeWeight(5);
   strokeCap(SQUARE);
-  float pistonDepth = volume * 2.031; // 2.031 length per liter
+  float pistonDepth = volume * 2; // 2 length per liter
   line(cydSX, cydSY + 600 - pistonDepth, cydSX + cydWidth, cydSY + 600 - pistonDepth);
 }
 
@@ -128,19 +135,18 @@ void indicateResult(int winSX, int winSY)
 
 void calculate()
 {
-  volume = Math.round(mol_Of_particle * ideal_Gas_Constant * temp * 1000) / 1000.0;
-}
-
-void animateParticles()
-{
-  
+  volume = Math.round(mol_Of_Particle * ideal_Gas_Constant * temp * 1000) / 1000.0;
 }
 
 void setup()
 {
   size(800, 800);
   
-  frameRate(30);
+  frameRate(60);
+  
+  for (int i = 0; i < particles.length; i++) {
+    particles[i] = new Particle(volume); // make particle * particles.length
+  }
   
   fontLight = loadFont("AppleSDGothicNeo-Thin-45.vlw");
   fontRegular = loadFont("AppleSDGothicNeo-Regular-50.vlw");
@@ -151,13 +157,14 @@ void setup()
   print("! Whenever the 'UP' or 'DN' button is pressed once, the absolute temperature (K) inside the cylinder increases or decreases by 10 degrees. \n");
   print("! The gas particle animation is just to show the behavior of the particles according to the temperature, and it is not calculated according to actual physical laws, but is implemented through approximate proportions. \n");
   print("! Volume values ​​are rounded to three decimal places. \n");
-  print("! Maximum temperature is 600(K). \n");
+  print("! Maximum temperature is", maxTemp, "(K). \n");
   print("\n");
   print("Starting program. \n");
-  print("Initial number of moles of gas:", mol_Of_particle, ", \nInitial(current) gas temperature (K):", temp, ", Initial(current) gas volume (L):", Math.round(mol_Of_particle * ideal_Gas_Constant * temp * 1000) / 1000.0, "\n(Ideal gas constant:", ideal_Gas_Constant, ", Atmospheric pressure: 1 atm) \n");
+  print("Initial number of moles of gas:", mol_Of_Particle, ", \nInitial(current) gas temperature (K):", temp, ", Initial(current) gas volume (L):", Math.round(mol_Of_Particle * ideal_Gas_Constant * temp * 1000) / 1000.0, "\n(Ideal gas constant:", ideal_Gas_Constant, ", Atmospheric pressure: 1 atm) \n");
   print("\n");
   print("*******************\n");
   print("\n");
+  
 }
 
 void draw()
@@ -170,19 +177,28 @@ void draw()
   drawCylinder(50, 100, 300, 600);
   drawWindow(450, 200, 300, 100, 50);
   drawTemp(tempSX, tempSY, 40);
-  calculate();
   indicateResult(450, 200);
   drawPiston(50, 100, 300);
   
+  for (int i = 0; i < particles.length; i++) {
+    particles[i].display();
+    particles[i].move(volume);
+  }
+    
 }
 
 void mousePressed()
 {
   if (distanceToUP <= 20){
     temp = temp + 10;
-    if (temp > 600){
+    if (temp > maxTemp){
+      if (wasMaxTemp == false) {
+        lastTemp = temp - 10;
+        wasMaxTemp = true;
+      }
+      temp = int(maxTemp);
       print("! Maximum temperature ! \n"); // alert maximum temp
-      temp = 600;
+      print("Current Gas Volume:", volume, ", Current Gas Temperature:", temp, "\n");
     } else {
       print("Current Gas Volume:", volume, ", Current Gas Temperature:", temp, "\n");
     }
@@ -190,10 +206,21 @@ void mousePressed()
   if (distanceToDN <= 20){
     temp = temp - 10;
     if (temp < 0){
-      print("! Minimum temperature ! \n"); // alert minimum temp
       temp = 0;
-    } else {
+      print("! Minimum temperature: 0K ! \n"); // alert minimum temp
       print("Current Gas Volume:", volume, ", Current Gas Temperature:", temp, "\n");
+    } else {
+      if (wasMaxTemp == true) {
+        temp = lastTemp;
+        wasMaxTemp = false;
+        print("Current Gas Volume:", volume, ", Current Gas Temperature:", temp, "\n");
+      } else {
+        print("Current Gas Volume:", volume, ", Current Gas Temperature:", temp, "\n");
+      }
     }
+  }
+  calculate();
+  for (int i = 0; i < particles.length; i++) {
+    particles[i] = new Particle(volume); // make particle * particles.length
   }
 }
