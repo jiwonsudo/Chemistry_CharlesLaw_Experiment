@@ -20,8 +20,8 @@ class Particle
     y = random(100 + 600 - pistonDepth, 700);
     parSize = 20;
     
-    speedX = random(2, 4);
-    speedY = random(2, 4);
+    speedX = tempRelativeSpeed;
+    speedY = tempRelativeSpeed;
     randomizeX = random(0, 1);
     randomizeY = random(0, 1);
     if (randomizeX > 0.5) {
@@ -31,7 +31,7 @@ class Particle
       speedY = speedY * -1;
     }
     
-    if (volume == 0) {
+    if (tempRelativeSpeed == 0.0) {
       speedX = 0;
       speedY = 0;
     }

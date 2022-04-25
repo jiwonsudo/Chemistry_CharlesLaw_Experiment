@@ -18,8 +18,8 @@ PFont fontLight, fontRegular;
 
 //initial settings
 
-int temp = 100; // temperature of gas (K, C = K + 273.15)
-int mol_Of_Particle = 5; // * N(A)
+float temp = 100.0; // temperature of gas (K, C = K + 273.15)
+int mol_Of_Particle = 10; // * N(A)
 float ideal_Gas_Constant = 0.08206;
 float volume = Math.round(mol_Of_Particle * ideal_Gas_Constant * temp * 1000) / 1000.0; // volume of gas (L)
 
@@ -29,12 +29,14 @@ Particle[] particles = new Particle[mol_Of_Particle]; // number of particles
 
 int volumeRoundingDigits = 3; // Number of decimal places to round to volume values
 
+float tempRelativeSpeed = (float)((double)temp / 10.000) ; // speed of particles relatived at temperature
+
 int tempSX = 550;
 int tempSY = 500;
 
 float maxTemp = Math.round((500 / 2) / (mol_Of_Particle * ideal_Gas_Constant) * 100) / 100.0;
 
-int lastTemp; // save lastest Temperature
+float lastTemp; // save lastest Temperature
 boolean wasMaxTemp = false; // check if it was Maximum Temperature last time
 
 float distanceToUP = dist(550, 558, mouseX, mouseY);
@@ -131,7 +133,7 @@ void indicateResult(int winSX, int winSY)
   fill(0);
   textFont(fontLight, 30);
   text(volume, winSX + 70, winSY + 37);
-  text(temp, winSX + 70, winSY + 87);
+  text(int(temp), winSX + 70, winSY + 87);
 }
 
 void calculate()
@@ -220,7 +222,10 @@ void mousePressed()
       }
     }
   }
+  
+  tempRelativeSpeed = temp / 20; // set tempRelativeSpeed when clicked
   calculate();
+  
   for (int i = 0; i < particles.length; i++) {
     particles[i] = new Particle(volume); // make particle * particles.length
   }
